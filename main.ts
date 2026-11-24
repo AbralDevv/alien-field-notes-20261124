@@ -15,7 +15,19 @@ function resolveOutputDir(): string {
   return "/output";
 }
 
+function validateEntry(entry: string): void {
+  // The brief requires one line, 1-200 chars. Fail loudly instead of
+  // writing an entry the harness would reject.
+  if (entry.length < 1 || entry.length > 200) {
+    throw new Error(`entry must be 1-200 chars, got ${entry.length}`);
+  }
+  if (/[\r\n]/.test(entry)) {
+    throw new Error("entry must be a single line");
+  }
+}
+
 function main(): void {
+  validateEntry(ENTRY);
   let outDir = resolveOutputDir();
   try {
     mkdirSync(outDir, { recursive: true });
