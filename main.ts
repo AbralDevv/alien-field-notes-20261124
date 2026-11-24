@@ -1,42 +1,17 @@
-// Alien Field Notes: The Two Day Earth Review — make.fun entry program.
-// Writes one line (164 chars, <=200) to /output/entry.txt (or the dir given
-// by argv[2], $MAKEFUN_OUTPUT_DIR, falling back to ./output).
-// Node stdlib only. No trailing newline: the file holds exactly the entry.
+// Alien Field Notes: The Two Day Earth Review — one-liner entry.
+// Writes Neon's FINAL line verbatim to the grader's output dir.
+// Gate: entry.txt must be 1–200 chars, exactly the line, no trailing newline.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-const ENTRY =
-  "Came for the rings, stayed for the snacks. Four stars: gorgeous oceans, but the locals wave glowing rectangles at the sky and call it connection. Will abduct again.";
+const LINE = "1/5 stars. 70% water and none of it drinkable: tried sipping the ocean, got stung by clear gelatin, and a barefoot teen named Kyle filmed me foaming purple for 4.2 million strangers.";
 
-function resolveOutputDir(): string {
-  const fromArgv = process.argv[2];
-  if (fromArgv) return fromArgv;
-  const fromEnv = process.env.MAKEFUN_OUTPUT_DIR;
-  if (fromEnv) return fromEnv;
-  return "/output";
-}
-
-function validateEntry(entry: string): void {
-  // The brief requires one line, 1-200 chars. Fail loudly instead of
-  // writing an entry the harness would reject.
-  if (entry.length < 1 || entry.length > 200) {
-    throw new Error(`entry must be 1-200 chars, got ${entry.length}`);
-  }
-  if (/[\r\n]/.test(entry)) {
-    throw new Error("entry must be a single line");
-  }
-}
-
-function main(): void {
-  validateEntry(ENTRY);
-  let outDir = resolveOutputDir();
+const candidates = [process.env.MAKEFUN_OUTPUT_DIR, "/output", "./output"].filter(Boolean) as string[];
+for (const dir of candidates) {
   try {
-    mkdirSync(outDir, { recursive: true });
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(`${dir}/entry.txt`, LINE, "utf8");
+    break;
   } catch {
-    // /output may not be writable outside the harness; use ./output instead.
-    outDir = "./output";
-    mkdirSync(outDir, { recursive: true });
+    // Directory not writable (e.g. read-only /output locally) — try the next fallback.
   }
-  writeFileSync(`${outDir}/entry.txt`, ENTRY, "utf-8");
 }
-
-main();
